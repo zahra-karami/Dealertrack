@@ -32,6 +32,7 @@ namespace DealerTrack.Web.Controllers
         [HttpPost, DisableRequestSizeLimit]
         public IActionResult UploadFile()
         {
+            
             try
             {
                 var response = new ResponseModel();
@@ -53,12 +54,15 @@ namespace DealerTrack.Web.Controllers
                 response.Result = new { list, mostOftenSoldVehicle };
                 response.ResponseCode = 200;
 
+                _logger.LogInformation($"File {file.FileName} Uploaded Successfully");
                 return Ok(response);
 
             }
             catch (Exception ex)
             {
+                _logger.LogCritical(ex, "Error on VehicleSale.FileUpload");
                 return StatusCode(500, $"Internal server error: {ex}");
+
             }
         }
 
