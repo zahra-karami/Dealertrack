@@ -64,7 +64,8 @@ namespace DealerTrack.Web.Services
                 {
                     var header = await sr.ReadLineAsync();
                     columns = string.IsNullOrEmpty(header) ? new string[0] : header.Split(Separator);
-                    rows = (await sr.ReadToEndAsync()).Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                    var records = (await sr.ReadToEndAsync()).Replace(Environment.NewLine, "\n");
+                    rows = records.Split(new[] { "\n" }, StringSplitOptions.None);
                 }
 
             }
