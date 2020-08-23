@@ -1,50 +1,19 @@
-﻿using System;
-using System.Linq;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
+﻿using DealerTrack.Web.Services;
+using DealerTrack.Web.Services.Interface;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace DealerTrack.Test
 {
-    public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
+    public class CustomServiceBuilder
     {
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        public ServiceProvider ServiceProvider { get; private set; }
+        public CustomServiceBuilder()
         {
-            builder.ConfigureServices(services =>
-            {
+            var service = new ServiceCollection();
+            service.AddSingleton<IPasswordHasher, PasswordHasher>();
+            service.AddSingleton<IUserService, UserService>();
+            ServiceProvider = service.BuildServiceProvider();
 
-                // Initial Db Context for Test
-
-                //var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                //services.Remove(descriptor);
-                //services.AddDbContext<ApplicationDbContext>(options =>
-                //{
-                //    options.UseInMemoryDatabase("InMemoryDbForTesting");
-                //});
-
-
-                //var sp = services.BuildServiceProvider();
-                //using (var scope = sp.CreateScope())
-                //{
-                //    var scopedServices = scope.ServiceProvider;
-                //    var db = scopedServices.GetRequiredService<ApplicationDbContext>();
-                //    var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory<TStartup>>>();
-
-                //    db.Database.EnsureCreated();
-
-                //    try
-                //    {
-                //        Utilities.InitializeDbForTests(db);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        logger.LogError(ex, "An error occurred seeding the database with test messages. Error: {Message}", ex.Message);
-                //    }
-                //}
-
-            });
         }
     }
 }

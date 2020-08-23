@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using DealerTrack.Web.Models;
@@ -12,10 +10,12 @@ namespace DealerTrack.Web.Services
 {
     public class UserService : IUserService
     {
-        private static readonly ConcurrentBag<UserModel> _userStore;
-        static UserService()
+        private  readonly ConcurrentBag<UserModel> _userStore;
+        private  readonly IPasswordHasher _hasher;
+        public UserService(IPasswordHasher hasher)
         {
             _userStore = new ConcurrentBag<UserModel>();
+            _hasher = hasher;
         }
 
         public Task<ResponseModel<bool>> RegisterUser(UserModel user)
@@ -37,17 +37,23 @@ namespace DealerTrack.Web.Services
             return Task.FromResult(response);
         }
 
-        public Task<ResponseModel<UserModel>> Authenticate(string username, string password)
+        public Task<ResponseModel<UserInfoModel>> Authenticate(string username, string password)
         {
-            var response = new ResponseModel<UserModel>();
+            var response = new ResponseModel<UserInfoModel>();
            
             var user = _userStore.FirstOrDefault(c => c.Username == username.Trim().ToLower());
 
             if (user != null)
             {
-                if (user.Password == password.Trim().ToLower())
+                var verify = _hasher.Check(user.Password, password.Trim().ToLower());
+                if (verify)
                 {
-                    response.Result = user;
+                    response.Result = new UserInfoModel
+                    {
+                        LastName = user.LastName,
+                        FirstName = user.FirstName,
+                        Username = user.Username
+                    };
                     response.IsSucceeded = true;
                 }
                 else
@@ -66,17 +72,11 @@ namespace DealerTrack.Web.Services
         private void CleanUser(UserModel userModel)
         {
             userModel.Username = userModel.Username.Trim().ToLower();
-            userModel.Password = userModel.Password.Trim().ToLower();
             userModel.FirstName = userModel.FirstName.Trim().ToLower();
             userModel.LastName = userModel.LastName.Trim().ToLower();
-            
-            // hash user password
-        }
 
-
-        public Task<bool> IsOnline(string name)
-        {
-            return Task.FromResult(true);
+            var hashed = _hasher.Hash(userModel.Password.Trim().ToLower());
+            userModel.Password = hashed;
         }
 
     }

@@ -24,6 +24,7 @@ namespace DealerTrack.Web
 
             services.AddSingleton<IFileValidator>( sp => new FileValidator(sp.GetService<IConfiguration>()));
             services.AddTransient(typeof(ICsvSerializer<>), typeof(CsvSerializer<>));
+            services.AddSingleton<IPasswordHasher, PasswordHasher>();
             services.AddSingleton<IUserService, UserService>();
 
             services.AddSpaStaticFiles(configuration =>
