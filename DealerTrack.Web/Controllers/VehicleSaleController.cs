@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using DealerTrack.Web.Models;
 using DealerTrack.Web.Services.Interface;
 using DealerTrack.Web.Utilities;
@@ -14,13 +14,13 @@ namespace DealerTrack.Web.Controllers
     public class VehicleSaleController : ControllerBase
     {
         private readonly ILogger<VehicleSaleController> _logger;
-        private readonly ICsvSerializer<VehicleSale> _serializer;
+        private readonly ICsvSerializer<VehicleSaleModel> _serializer;
         private readonly IFileValidator _fileValidator;
 
-        public VehicleSaleController(ILogger<VehicleSaleController> logger, ICsvSerializer<VehicleSale> serializer, IFileValidator fileValidator)
+        public VehicleSaleController(ILogger<VehicleSaleController> logger, ICsvSerializer<VehicleSaleModel> serializer, IFileValidator fileValidator)
         {
             _logger = logger;
-            
+
             _fileValidator = fileValidator;
 
             _serializer = serializer;
@@ -28,22 +28,19 @@ namespace DealerTrack.Web.Controllers
             _serializer.UseTextQualifier = true;
         }
 
-        //[ValidateAntiForgeryToken]
         [HttpPost, DisableRequestSizeLimit]
-        public IActionResult UploadFile()
+        public async Task<IActionResult> UploadFile()
         {
-            
             try
             {
-                var response = new ResponseModel();
-
+                var response = new ResponseModel<VehicleSaleResponseModel>();
                 var file = Request.Form.Files.FirstOrDefault();
 
                 response.ResponseMessage = _fileValidator.Validate(file);
                 if (response.ResponseMessage.Count > 0) return BadRequest(response);
 
-                
-                var list = _serializer.Deserialize(file.OpenReadStream());
+
+                var list = await _serializer.DeserializeAsync(file.OpenReadStream());
                 var mostOftenSoldVehicle = list.GroupBy(c => c.Vehicle)
                     .OrderByDescending(gp => gp.Count())
                     .Take(1)
@@ -51,7 +48,11 @@ namespace DealerTrack.Web.Controllers
 
 
                 response.IsSucceeded = true;
-                response.Result = new { list, mostOftenSoldVehicle };
+                response.Result = new VehicleSaleResponseModel
+                {
+                    List = list,
+                    MostOftenSoldVehicle = mostOftenSoldVehicle
+                };
                 response.ResponseCode = 200;
 
                 _logger.LogInformation($"File {file.FileName} Uploaded Successfully");
@@ -65,15 +66,6 @@ namespace DealerTrack.Web.Controllers
 
             }
         }
-
-
-
-        [HttpGet]
-        public IEnumerable<VehicleSale> Get()
-        {
-            return new List<VehicleSale>();
-        }
-
 
     }
 }

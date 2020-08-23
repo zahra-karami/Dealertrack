@@ -3,7 +3,7 @@
 namespace DealerTrack.Web.Models
 {
     [Serializable]
-    public class VehicleSale
+    public class VehicleSaleModel
     {
         public int DealNumber { set; get; }
         public string CustomerName { set; get; }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace DealerTrack.Web.Services.Interface
 {
@@ -17,7 +18,6 @@ namespace DealerTrack.Web.Services.Interface
          bool UseLineNumbers { get; set; }
          bool UseTextQualifier { get; set; }
 
-        IList<T> Deserialize(Stream stream);
-        void Serialize(Stream stream, IList<T> data);
+        Task<IList<T>> DeserializeAsync (Stream stream);
     }
 }

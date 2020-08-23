@@ -6,12 +6,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using DealerTrack.Web.Services.Interface;
 using DealerTrack.Web.Utilities;
 
 namespace DealerTrack.Web.Services
 {
-
     public class CsvSerializer<T> : ICsvSerializer<T> where T : class, new()
     {
         private readonly List<PropertyInfo> _properties;
@@ -51,20 +51,20 @@ namespace DealerTrack.Web.Services
             _properties = r.ToList();
         }
 
-        public IList<T> Deserialize(Stream stream)
+        public async Task<IList<T>> DeserializeAsync(Stream stream)
         {
             string[] columns;
             string[] rows;
 
             try
             {
-                var encoding = GetEncoding(stream);
+                var encoding = await GetEncodingAsync(stream);
                 stream.Position = 0;
                 using (var sr = new StreamReader(stream, encoding))
                 {
-                    var header = sr.ReadLine();
+                    var header = await sr.ReadLineAsync();
                     columns = string.IsNullOrEmpty(header) ? new string[0] : header.Split(Separator);
-                    rows = sr.ReadToEnd().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                    rows = (await sr.ReadToEndAsync()).Split(new[] { Environment.NewLine }, StringSplitOptions.None);
                 }
 
             }
@@ -86,7 +86,7 @@ namespace DealerTrack.Web.Services
 
                 if (!IgnoreEmptyLines && string.IsNullOrWhiteSpace(line))
                 {
-                    throw new InvalidCsvFormatException(string.Format(@"Error: Empty line at line number: {0}", row));
+                    throw new InvalidCsvFormatException($@"Error: Empty line at line number: {row}");
                 }
 
                 var reg = $"{Separator}{SplitRex}";
@@ -154,78 +154,11 @@ namespace DealerTrack.Web.Services
             return data;
         }
 
-        public void Serialize(Stream stream, IList<T> data)
-        {
-            var sb = new StringBuilder();
-            var values = new List<string>();
-
-            sb.AppendLine(GetHeader());
-
-            var row = 1;
-            foreach (var item in data)
-            {
-                values.Clear();
-
-                if (UseLineNumbers)
-                {
-                    values.Add(row++.ToString());
-                }
-
-                foreach (var p in _properties)
-                {
-                    var raw = p.GetValue(item);
-                    var value = raw == null ? "" :
-                        raw.ToString()
-                        .Replace(Separator.ToString(), Replacement)
-                        .Replace(Environment.NewLine, NewlineReplacement);
-
-                    if (UseTextQualifier)
-                    {
-                        value = string.Format("\"{0}\"", value);
-                    }
-
-                    values.Add(value);
-                }
-                sb.AppendLine(string.Join(Separator.ToString(), values.ToArray()));
-            }
-
-            if (UseEofLiteral)
-            {
-                values.Clear();
-
-                if (UseLineNumbers)
-                {
-                    values.Add(row++.ToString());
-                }
-
-                values.Add("EOF");
-
-                sb.AppendLine(string.Join(Separator.ToString(), values.ToArray()));
-            }
-
-            using (var sw = new StreamWriter(stream))
-            {
-                sw.Write(sb.ToString().Trim());
-            }
-        }
-
-        private string GetHeader()
-        {
-            var header = _properties.Select(a => a.Name);
-
-            if (UseLineNumbers)
-            {
-                header = new string[] { RowNumberColumnTitle }.Union(header);
-            }
-
-            return string.Join(Separator.ToString(), header.ToArray());
-        }
-
-        private static Encoding GetEncoding(Stream stream)
+        private async Task<Encoding> GetEncodingAsync(Stream stream)
         {
             // Read the BOM
             var bom = new byte[4];
-            stream.Read(bom, 0, 4);
+            await stream.ReadAsync(bom, 0, 4);
 
             // Analyze the BOM
             if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
@@ -255,6 +188,4 @@ namespace DealerTrack.Web.Services
         {
         }
     }
-
-
 }

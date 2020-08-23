@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DealerTrack.Web.Utilities
 {
-    public class ResponseModel
+    [Serializable]
+    public class ResponseModel<T>
     {
         public bool IsSucceeded { set; get; } = false;
         public int ResponseCode { set; get; } = 400;
         public List<string> ResponseMessage { set; get; } = new List<string>();
-        public object Result { set; get; }
+        public T Result { set; get; }
     }
 }
