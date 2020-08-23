@@ -35,6 +35,12 @@
     <ProjectReference Include="..\DealerTrack.Logging\DealerTrack.Logging.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ClientApp\src\app\_helpers\" />
+    <Folder Include="ClientApp\src\app\_models\" />
+    <Folder Include="ClientApp\src\app\_services\" />
+  </ItemGroup>
+
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <!-- Ensure Node.js is installed -->
     <Exec Command="node --version" ContinueOnError="true">

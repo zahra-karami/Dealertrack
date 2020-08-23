@@ -21,8 +21,11 @@ namespace DealerTrack.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
             services.AddSingleton<IFileValidator>( sp => new FileValidator(sp.GetService<IConfiguration>()));
             services.AddTransient(typeof(ICsvSerializer<>), typeof(CsvSerializer<>));
+            services.AddSingleton<IUserService, UserService>();
+
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "ClientApp/dist";

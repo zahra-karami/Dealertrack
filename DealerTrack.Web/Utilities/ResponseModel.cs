@@ -7,7 +7,7 @@ namespace DealerTrack.Web.Utilities
     public class ResponseModel<T>
     {
         public bool IsSucceeded { set; get; } = false;
-        public int ResponseCode { set; get; } = 400;
+        public int ResponseCode { set; get; } 
         public List<string> ResponseMessage { set; get; } = new List<string>();
         public T Result { set; get; }
     }
